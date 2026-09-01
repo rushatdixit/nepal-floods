@@ -218,18 +218,20 @@ async function fetchSentinel2Layer(startDate, endDate) {
         // Use all granules from the clearest pass
         const relevantFeatures = passes[bestPassTime];
         
-        // Fetch SAS tokens and create a TileLayer for each granule
-        const layers = await Promise.all(relevantFeatures.map(async (item) => {
-            const tokenResponse = await fetch('https://planetarycomputer.microsoft.com/api/sas/v1/token/' + item.collection);
-            const tokenData = await tokenResponse.json();
-            const tileUrl = `${TILE_API_URL}?collection=${COLLECTION}&item=${item.id}&assets=visual&format=png&token=${tokenData.token}`;
-            
+        // Fetch ONE SAS token for the entire collection (huge performance boost)
+        const tokenResponse = await fetch('https://planetarycomputer.microsoft.com/api/sas/v1/token/' + COLLECTION);
+        const tokenData = await tokenResponse.json();
+        const sasToken = tokenData.token;
+        
+        // Create a TileLayer for each granule using the shared token
+        const layers = relevantFeatures.map(item => {
+            const tileUrl = `${TILE_API_URL}?collection=${COLLECTION}&item=${item.id}&assets=visual&format=png&token=${sasToken}`;
             return L.tileLayer(tileUrl, {
                 attribution: 'Sentinel-2 imagery &copy; <a href="https://planetarycomputer.microsoft.com/">Microsoft</a>',
                 maxZoom: 18,
                 bounds: RIVER_BOUNDS
             });
-        }));
+        });
 
         // Return them as a single LayerGroup so they can be toggled together
         return L.layerGroup(layers);
@@ -241,15 +243,22 @@ async function fetchSentinel2Layer(startDate, endDate) {
 }
 
 async function init() {
-    // Fetch layers
-    const beforeLayer = await fetchSentinel2Layer('2026-06-01T00:00:00Z', '2026-08-25T23:59:59Z');
-    const afterLayer = await fetchSentinel2Layer('2026-08-27T00:00:00Z', '2026-08-31T23:59:59Z');
+    const toggleBtn = document.getElementById('toggle-btn');
+    toggleBtn.innerText = 'Loading Satellite Imagery...';
+    toggleBtn.disabled = true;
+
+    // Fetch layers concurrently (cuts loading time in half)
+    const [beforeLayer, afterLayer] = await Promise.all([
+        fetchSentinel2Layer('2026-06-01T00:00:00Z', '2026-08-25T23:59:59Z'),
+        fetchSentinel2Layer('2026-08-27T00:00:00Z', '2026-08-31T23:59:59Z')
+    ]);
 
     let currentLayer = 'after';
-    const toggleBtn = document.getElementById('toggle-btn');
 
     if (beforeLayer && afterLayer) {
         afterLayer.addTo(map);
+        toggleBtn.innerText = 'Switch to Before (Aug 10-25)';
+        toggleBtn.disabled = false;
 
         toggleBtn.addEventListener('click', () => {
             if (currentLayer === 'after') {
