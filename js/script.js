@@ -193,7 +193,44 @@ async function fetchSentinel2LayerFast(itemIds) {
     }
 }
 
+
+// --- Network Loading Indicator Logic ---
+const loadingIndicator = document.getElementById('loading-indicator');
+const loadingText = document.getElementById('loading-text');
+
+let loadingStates = { before: 0, after: 0 };
+
+function updateLoadingUI() {
+    if (loadingStates.after > 0 && loadingStates.before > 0) {
+        loadingText.innerText = 'Streaming Before & After...';
+        loadingIndicator.style.display = 'flex';
+    } else if (loadingStates.after > 0) {
+        loadingText.innerText = 'Streaming After Imagery...';
+        loadingIndicator.style.display = 'flex';
+    } else if (loadingStates.before > 0) {
+        loadingText.innerText = 'Streaming Before Imagery...';
+        loadingIndicator.style.display = 'flex';
+    } else {
+        loadingIndicator.style.display = 'none';
+    }
+}
+
+function attachLoadingEvents(layerGroup, key) {
+    layerGroup.eachLayer(layer => {
+        layer.on('loading', () => {
+            loadingStates[key]++;
+            updateLoadingUI();
+        });
+        layer.on('load', () => {
+            loadingStates[key]--;
+            updateLoadingUI();
+        });
+    });
+}
+// ---------------------------------------
+
 async function init() {
+
     const toggleBtn = document.getElementById('toggle-btn');
     toggleBtn.innerText = 'Loading Satellite Imagery...';
     toggleBtn.disabled = true;
@@ -207,6 +244,10 @@ async function init() {
         fetchSentinel2LayerFast(beforeIds),
         fetchSentinel2LayerFast(afterIds)
     ]);
+
+    // Attach network event listeners for the professional loading UI
+    if (beforeLayer) attachLoadingEvents(beforeLayer, 'before');
+    if (afterLayer) attachLoadingEvents(afterLayer, 'after');
 
     let currentLayer = 'after';
 
