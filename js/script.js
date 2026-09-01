@@ -355,6 +355,12 @@ let currentTempMarker = null;
 let permanentLayers = [];
 let measureTooltip = document.getElementById('measure-tooltip');
 
+
+const clearMeasureBtn = document.getElementById('clear-measure-btn');
+clearMeasureBtn.addEventListener('click', () => {
+    clearMeasurements();
+});
+
 const measureBtn = document.getElementById('measure-btn');
 measureBtn.addEventListener('click', () => {
     isMeasuring = !isMeasuring;
@@ -366,7 +372,16 @@ measureBtn.addEventListener('click', () => {
         measureBtn.classList.remove('active');
         measureBtn.innerText = '📏 Measure';
         map.getContainer().style.cursor = '';
-        clearMeasurements();
+        // Do not clear measurements on stop, wait for explicit clear
+        if (currentStartPoint) {
+            // just cancel the in-progress line
+            if (currentTempLine) map.removeLayer(currentTempLine);
+            if (currentTempMarker) map.removeLayer(currentTempMarker);
+            currentStartPoint = null;
+            currentTempLine = null;
+            currentTempMarker = null;
+            measureTooltip.innerText = 'Click to start...';
+        }
     }
 });
 
@@ -441,8 +456,13 @@ map.on('mousemove', (e) => {
 });
 
 map.on('contextmenu', (e) => {
-    if (isMeasuring) {
-        clearMeasurements();
+    if (isMeasuring && currentStartPoint) {
+        if (currentTempLine) map.removeLayer(currentTempLine);
+        if (currentTempMarker) map.removeLayer(currentTempMarker);
+        currentStartPoint = null;
+        currentTempLine = null;
+        currentTempMarker = null;
+        measureTooltip.innerText = 'Click to start...';
     }
 });
 // --------------------------
