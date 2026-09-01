@@ -13,6 +13,7 @@ const map = L.map('map', {
 }).setView([28.05, 85.25], 10);
 
 L.control.zoom({ position: 'topright' }).addTo(map);
+L.control.scale({ position: 'bottomright', metric: true, imperial: true }).addTo(map);
 
 // Add Dark Base Map (Esri World Dark Gray Base - No API key required)
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
