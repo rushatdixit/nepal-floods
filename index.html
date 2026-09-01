@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nepal Floods 2026: Sentinel-2 Imagery Analysis</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="info-card">
+        <h1>Nepal Floods 2026: Sentinel-2</h1>
+        <p>Visualizing the devastating flash floods and mudslides of August 26, 2026, in the Nepal-Tibet border region (Rasuwa district / Gyirong Port) using high-resolution satellite imagery.</p>
+        <button id="toggle-btn">Switch to Before (Aug 10-25)</button>
+    </div>
+
+    
+    
+    
+    <div id="locations-panel">
+        <h3>Key Locations</h3>
+        <button class="loc-btn" data-index="0">1. Langtang Lirung Glacier</button>
+        <button class="loc-btn" data-index="1">2. Gyirong Port (China)</button>
+        <button class="loc-btn" data-index="2">3. Rasuwa Gadhi</button>
+        <button class="loc-btn" data-index="3">4. Trisuli / Bidur</button>
+    </div>
+
+
+
+
+    
+    
+
+    
+    
+
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Custom Script -->
+    <script src="script.js"></script>
+</body>
+</html>
