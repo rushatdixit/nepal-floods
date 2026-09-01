@@ -325,11 +325,11 @@ document.getElementById('info-collapse-btn').addEventListener('click', function(
     if (text.style.display === 'none') {
         text.style.display = 'block';
         disc.style.display = 'block';
-        this.innerText = '−';
+        this.innerHTML = '<svg width="12" height="2" viewBox="0 0 12 2" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="12" height="2" fill="currentColor"/></svg>';
     } else {
         text.style.display = 'none';
         disc.style.display = 'none';
-        this.innerText = '+';
+        this.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7 5V0H5V5H0V7H5V12H7V7H12V5H7Z" fill="currentColor"/></svg>';
     }
 });
 
@@ -337,10 +337,10 @@ document.getElementById('loc-collapse-btn').addEventListener('click', function()
     const content = document.getElementById('loc-content');
     if (content.style.display === 'none') {
         content.style.display = 'block';
-        this.innerText = '−';
+        this.innerHTML = '<svg width="12" height="2" viewBox="0 0 12 2" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="12" height="2" fill="currentColor"/></svg>';
     } else {
         content.style.display = 'none';
-        this.innerText = '+';
+        this.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7 5V0H5V5H0V7H5V12H7V7H12V5H7Z" fill="currentColor"/></svg>';
     }
 });
 // -----------------------------
