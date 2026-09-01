@@ -290,7 +290,7 @@ async function init() {
     if (beforeLayer) attachLoadingEvents(beforeLayer, 'before');
     if (afterLayer) attachLoadingEvents(afterLayer, 'after');
 
-    let currentLayer = 'after';
+    window.window.currentLayer = 'after';
 
     if (beforeLayer && afterLayer) {
         afterLayer.addTo(map);
@@ -298,16 +298,16 @@ async function init() {
         toggleBtn.disabled = false;
 
         toggleBtn.addEventListener('click', () => {
-            if (currentLayer === 'after') {
+            if (window.currentLayer === 'after') {
                 map.removeLayer(afterLayer);
                 beforeLayer.addTo(map);
                 toggleBtn.innerText = 'Switch to After (Optical)';
-                currentLayer = 'before';
+                window.currentLayer = 'before';
             } else {
                 map.removeLayer(beforeLayer);
                 afterLayer.addTo(map);
                 toggleBtn.innerText = 'Switch to Before (Aug 10-25)';
-                currentLayer = 'after';
+                window.currentLayer = 'after';
             }
         });
     } else {
@@ -388,22 +388,24 @@ map.on('click', (e) => {
     
     if (!currentStartPoint) {
         currentStartPoint = e.latlng;
-        currentTempMarker = L.circleMarker(e.latlng, { radius: 4, color: '#00ffff', fillColor: '#00ffff', fillOpacity: 1 }).addTo(map);
+        const color = window.currentLayer === 'before' ? '#00ff00' : '#ff3333';
+        currentTempMarker = L.circleMarker(e.latlng, { radius: 4, color: color, fillColor: color, fillOpacity: 1 }).addTo(map);
         measureTooltip.innerText = '0 m';
     } else {
         const endPoint = e.latlng;
         const dist = map.distance(currentStartPoint, endPoint);
         const text = formatDist(dist);
+        const color = window.currentLayer === 'before' ? '#00ff00' : '#ff3333';
         
-        const line = L.polyline([currentStartPoint, endPoint], { color: '#00ffff', weight: 3, dashArray: '5, 5' }).addTo(map);
-        const p1 = L.circleMarker(currentStartPoint, { radius: 4, color: '#00ffff', fillColor: '#00ffff', fillOpacity: 1 }).addTo(map);
-        const p2 = L.circleMarker(endPoint, { radius: 4, color: '#00ffff', fillColor: '#00ffff', fillOpacity: 1 }).addTo(map);
+        const line = L.polyline([currentStartPoint, endPoint], { color: color, weight: 3, dashArray: '5, 5' }).addTo(map);
+        const p1 = L.circleMarker(currentStartPoint, { radius: 4, color: color, fillColor: color, fillOpacity: 1 }).addTo(map);
+        const p2 = L.circleMarker(endPoint, { radius: 4, color: color, fillColor: color, fillOpacity: 1 }).addTo(map);
         
         const label = L.marker(endPoint, {
             icon: L.divIcon({
                 className: 'measure-permanent-label',
                 iconSize: null,
-                html: `<div style="background:rgba(0,0,0,0.8); color:#00ffff; padding:2px 6px; border-radius:3px; font-size:11px; font-weight:bold; border:1px solid #00ffff; white-space:nowrap; box-shadow:0 2px 4px rgba(0,0,0,0.5);">${text}</div>`,
+                html: `<div style="background:rgba(0,0,0,0.8); color:${color}; padding:2px 6px; border-radius:3px; font-size:11px; font-weight:bold; border:1px solid ${color}; white-space:nowrap; box-shadow:0 2px 4px rgba(0,0,0,0.5);">${text}</div>`,
                 iconAnchor: [20, 25]
             })
         }).addTo(map);
@@ -431,7 +433,8 @@ map.on('mousemove', (e) => {
         measureTooltip.innerText = formatDist(dist);
         
         if (currentTempLine) map.removeLayer(currentTempLine);
-        currentTempLine = L.polyline([currentStartPoint, e.latlng], { color: '#00ffff', weight: 2, dashArray: '4, 4', opacity: 0.7 }).addTo(map);
+        const color = window.currentLayer === 'before' ? '#00ff00' : '#ff3333';
+        currentTempLine = L.polyline([currentStartPoint, e.latlng], { color: color, weight: 2, dashArray: '4, 4', opacity: 0.7 }).addTo(map);
     } else {
         measureTooltip.innerText = 'Click to start...';
     }
