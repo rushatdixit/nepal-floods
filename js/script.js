@@ -169,63 +169,16 @@ const STAC_API_URL = 'https://planetarycomputer.microsoft.com/api/stac/v1/search
 const TILE_API_URL = 'https://planetarycomputer.microsoft.com/api/data/v1/item/tiles/WebMercatorQuad/{z}/{x}/{y}';
 const COLLECTION = 'sentinel-2-l2a';
 
-async function fetchSentinel2Layer(startDate, endDate) {
+async function fetchSentinel2LayerFast(itemIds) {
     try {
-        const response = await fetch(STAC_API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                collections: [COLLECTION],
-                bbox: [84.9, 27.7, 85.65, 28.45], // Bounding box covering the entire map view
-                datetime: `${startDate}/${endDate}`,
-                limit: 100,
-                query: {
-                    'eo:cloud_cover': { lt: 80 }
-                },
-                sortby: [{ field: 'properties.datetime', direction: 'desc' }]
-            })
-        });
-
-        const data = await response.json();
-        
-        if (!data.features || data.features.length === 0) {
-            console.error(`No imagery found for period ${startDate} to ${endDate}`);
-            return null;
-        }
-
-        // Group features by orbit pass (datetime)
-        const passes = {};
-        data.features.forEach(f => {
-            const dt = f.properties.datetime;
-            if (!passes[dt]) passes[dt] = [];
-            passes[dt].push(f);
-        });
-
-        // Find the pass with the absolute minimum average cloud cover
-        let bestPassTime = null;
-        let minAvgCloudCover = 100;
-
-        for (const [dt, features] of Object.entries(passes)) {
-            const avgCloud = features.reduce((sum, f) => sum + f.properties['eo:cloud_cover'], 0) / features.length;
-            if (avgCloud < minAvgCloudCover) {
-                minAvgCloudCover = avgCloud;
-                bestPassTime = dt;
-            }
-        }
-        
-        // Use all granules from the clearest pass
-        const relevantFeatures = passes[bestPassTime];
-        
-        // Fetch ONE SAS token for the entire collection (huge performance boost)
+        // Fetch ONE SAS token for the entire collection (takes <100ms)
         const tokenResponse = await fetch('https://planetarycomputer.microsoft.com/api/sas/v1/token/' + COLLECTION);
         const tokenData = await tokenResponse.json();
         const sasToken = tokenData.token;
         
-        // Create a TileLayer for each granule using the shared token
-        const layers = relevantFeatures.map(item => {
-            const tileUrl = `${TILE_API_URL}?collection=${COLLECTION}&item=${item.id}&assets=visual&format=png&token=${sasToken}`;
+        // Directly map the hardcoded IDs to TileLayers
+        const layers = itemIds.map(id => {
+            const tileUrl = `${TILE_API_URL}?collection=${COLLECTION}&item=${id}&assets=visual&format=png&token=${sasToken}`;
             return L.tileLayer(tileUrl, {
                 attribution: 'Sentinel-2 imagery &copy; <a href="https://planetarycomputer.microsoft.com/">Microsoft</a>',
                 maxZoom: 18,
@@ -233,9 +186,7 @@ async function fetchSentinel2Layer(startDate, endDate) {
             });
         });
 
-        // Return them as a single LayerGroup so they can be toggled together
         return L.layerGroup(layers);
-
     } catch (error) {
         console.error('Error fetching layer:', error);
         return null;
@@ -247,10 +198,14 @@ async function init() {
     toggleBtn.innerText = 'Loading Satellite Imagery...';
     toggleBtn.disabled = true;
 
-    // Fetch layers concurrently (cuts loading time in half)
+    // The exact STAC item IDs for the clearest Before and After days
+    const beforeIds = ["S2C_MSIL2A_20260812T045701_R119_T45RUM_20260812T100317","S2C_MSIL2A_20260812T045701_R119_T45RUL_20260812T100317","S2C_MSIL2A_20260812T045701_R119_T45RTM_20260812T100317","S2C_MSIL2A_20260812T045701_R119_T45RTL_20260812T100317"];
+    const afterIds = ["S2B_MSIL2A_20260827T045659_R119_T45RUM_20260827T084453","S2B_MSIL2A_20260827T045659_R119_T45RUL_20260827T084453"];
+
+    // Fetch layers concurrently using hardcoded IDs (skips STAC search completely)
     const [beforeLayer, afterLayer] = await Promise.all([
-        fetchSentinel2Layer('2026-06-01T00:00:00Z', '2026-08-25T23:59:59Z'),
-        fetchSentinel2Layer('2026-08-27T00:00:00Z', '2026-08-31T23:59:59Z')
+        fetchSentinel2LayerFast(beforeIds),
+        fetchSentinel2LayerFast(afterIds)
     ]);
 
     let currentLayer = 'after';
