@@ -349,9 +349,10 @@ document.getElementById('loc-collapse-btn').addEventListener('click', function()
 
 // --- Measure Tool Logic ---
 let isMeasuring = false;
-let measurePoints = [];
-let measurePolyline = null;
-let measureMarkers = [];
+let currentStartPoint = null;
+let currentTempLine = null;
+let currentTempMarker = null;
+let permanentLayers = [];
 let measureTooltip = document.getElementById('measure-tooltip');
 
 const measureBtn = document.getElementById('measure-btn');
@@ -365,33 +366,56 @@ measureBtn.addEventListener('click', () => {
         measureBtn.classList.remove('active');
         measureBtn.innerText = '📏 Measure';
         map.getContainer().style.cursor = '';
-        clearMeasurement();
+        clearMeasurements();
     }
 });
 
-function clearMeasurement() {
-    if (measurePolyline) map.removeLayer(measurePolyline);
-    measureMarkers.forEach(m => map.removeLayer(m));
-    measurePoints = [];
-    measureMarkers = [];
-    measurePolyline = null;
+function clearMeasurements() {
+    if (currentTempLine) map.removeLayer(currentTempLine);
+    if (currentTempMarker) map.removeLayer(currentTempMarker);
+    permanentLayers.forEach(l => map.removeLayer(l));
+    permanentLayers = [];
+    currentStartPoint = null;
     measureTooltip.style.display = 'none';
+}
+
+function formatDist(dist) {
+    return dist > 2000 ? (dist / 1000).toFixed(2) + ' km' : Math.round(dist) + ' m';
 }
 
 map.on('click', (e) => {
     if (!isMeasuring) return;
     
-    measurePoints.push(e.latlng);
-    
-    const marker = L.circleMarker(e.latlng, { radius: 4, color: '#00ffff', fillColor: '#00ffff', fillOpacity: 1 }).addTo(map);
-    measureMarkers.push(marker);
-    
-    if (measurePoints.length > 1) {
-        if (measurePolyline) map.removeLayer(measurePolyline);
-        measurePolyline = L.polyline(measurePoints, { color: '#00ffff', weight: 3, dashArray: '5, 5' }).addTo(map);
+    if (!currentStartPoint) {
+        currentStartPoint = e.latlng;
+        currentTempMarker = L.circleMarker(e.latlng, { radius: 4, color: '#00ffff', fillColor: '#00ffff', fillOpacity: 1 }).addTo(map);
+        measureTooltip.innerText = '0 m';
+    } else {
+        const endPoint = e.latlng;
+        const dist = map.distance(currentStartPoint, endPoint);
+        const text = formatDist(dist);
+        
+        const line = L.polyline([currentStartPoint, endPoint], { color: '#00ffff', weight: 3, dashArray: '5, 5' }).addTo(map);
+        const p1 = L.circleMarker(currentStartPoint, { radius: 4, color: '#00ffff', fillColor: '#00ffff', fillOpacity: 1 }).addTo(map);
+        const p2 = L.circleMarker(endPoint, { radius: 4, color: '#00ffff', fillColor: '#00ffff', fillOpacity: 1 }).addTo(map);
+        
+        const label = L.marker(endPoint, {
+            icon: L.divIcon({
+                className: 'measure-permanent-label',
+                html: `<div style="background:rgba(0,0,0,0.8); color:#00ffff; padding:2px 6px; border-radius:3px; font-size:11px; font-weight:bold; border:1px solid #00ffff; white-space:nowrap; box-shadow:0 2px 4px rgba(0,0,0,0.5);">${text}</div>`,
+                iconAnchor: [30, 30]
+            })
+        }).addTo(map);
+        
+        permanentLayers.push(line, p1, p2, label);
+        
+        if (currentTempLine) map.removeLayer(currentTempLine);
+        if (currentTempMarker) map.removeLayer(currentTempMarker);
+        currentStartPoint = null;
+        currentTempLine = null;
+        currentTempMarker = null;
+        measureTooltip.innerText = 'Click to start...';
     }
-    
-    updateMeasureTooltip(e);
 });
 
 map.on('mousemove', (e) => {
@@ -401,35 +425,20 @@ map.on('mousemove', (e) => {
     measureTooltip.style.left = (e.originalEvent.pageX + 15) + 'px';
     measureTooltip.style.top = (e.originalEvent.pageY + 15) + 'px';
     
-    updateMeasureTooltip(e);
-});
-
-function updateMeasureTooltip(e) {
-    if (measurePoints.length === 0) {
-        measureTooltip.innerText = 'Click to start...';
-        return;
-    }
-    
-    let totalDist = 0;
-    for (let i = 0; i < measurePoints.length - 1; i++) {
-        totalDist += map.distance(measurePoints[i], measurePoints[i+1]);
-    }
-    
-    if (e && e.latlng) {
-        totalDist += map.distance(measurePoints[measurePoints.length - 1], e.latlng);
-    }
-    
-    if (totalDist > 2000) {
-        measureTooltip.innerText = (totalDist / 1000).toFixed(2) + ' km';
+    if (currentStartPoint) {
+        const dist = map.distance(currentStartPoint, e.latlng);
+        measureTooltip.innerText = formatDist(dist);
+        
+        if (currentTempLine) map.removeLayer(currentTempLine);
+        currentTempLine = L.polyline([currentStartPoint, e.latlng], { color: '#00ffff', weight: 2, dashArray: '4, 4', opacity: 0.7 }).addTo(map);
     } else {
-        measureTooltip.innerText = Math.round(totalDist) + ' m';
+        measureTooltip.innerText = 'Click to start...';
     }
-}
+});
 
 map.on('contextmenu', (e) => {
     if (isMeasuring) {
-        clearMeasurement();
-        updateMeasureTooltip(e);
+        clearMeasurements();
     }
 });
 // --------------------------
