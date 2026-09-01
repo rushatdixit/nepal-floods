@@ -316,3 +316,31 @@ async function init() {
 }
 
 init();
+
+
+// --- UI Minimization Logic ---
+document.getElementById('info-collapse-btn').addEventListener('click', function() {
+    const text = document.getElementById('info-card-text');
+    const disc = document.getElementById('info-disclaimer');
+    if (text.style.display === 'none') {
+        text.style.display = 'block';
+        disc.style.display = 'block';
+        this.innerText = '−';
+    } else {
+        text.style.display = 'none';
+        disc.style.display = 'none';
+        this.innerText = '+';
+    }
+});
+
+document.getElementById('loc-collapse-btn').addEventListener('click', function() {
+    const content = document.getElementById('loc-content');
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        this.innerText = '−';
+    } else {
+        content.style.display = 'none';
+        this.innerText = '+';
+    }
+});
+// -----------------------------
