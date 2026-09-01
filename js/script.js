@@ -169,7 +169,7 @@ const STAC_API_URL = 'https://planetarycomputer.microsoft.com/api/stac/v1/search
 const TILE_API_URL = 'https://planetarycomputer.microsoft.com/api/data/v1/item/tiles/WebMercatorQuad/{z}/{x}/{y}';
 const COLLECTION = 'sentinel-2-l2a';
 
-async function fetchSentinel2Layer(startDate, endDate) {
+async function fetchSentinel2Layer(startDate, endDate, maxCloudCover = 80) {
     try {
         const response = await fetch(STAC_API_URL, {
             method: 'POST',
@@ -182,7 +182,7 @@ async function fetchSentinel2Layer(startDate, endDate) {
                 datetime: `${startDate}/${endDate}`,
                 limit: 100,
                 query: {
-                    'eo:cloud_cover': { lt: 80 }
+                    'eo:cloud_cover': { lt: maxCloudCover }
                 },
                 sortby: [{ field: 'properties.datetime', direction: 'desc' }]
             })
@@ -280,9 +280,11 @@ async function init() {
     toggleBtn.disabled = true;
 
     // Fetch layers concurrently
+    // We drastically expanded the 'After' date range to late September, and 
+    // lowered the maximum cloud cover tolerance to 20% to force the API to find a clearer day!
     const [beforeLayer, afterLayer] = await Promise.all([
-        fetchSentinel2Layer('2026-06-01T00:00:00Z', '2026-08-25T23:59:59Z'),
-        fetchSentinel2Layer('2026-08-27T00:00:00Z', '2026-08-31T23:59:59Z')
+        fetchSentinel2Layer('2026-06-01T00:00:00Z', '2026-08-25T23:59:59Z', 80),
+        fetchSentinel2Layer('2026-08-27T00:00:00Z', '2026-09-30T23:59:59Z', 20)
     ]);
 
     // Attach network event listeners for the professional loading UI
