@@ -402,8 +402,9 @@ map.on('click', (e) => {
         const label = L.marker(endPoint, {
             icon: L.divIcon({
                 className: 'measure-permanent-label',
+                iconSize: null,
                 html: `<div style="background:rgba(0,0,0,0.8); color:#00ffff; padding:2px 6px; border-radius:3px; font-size:11px; font-weight:bold; border:1px solid #00ffff; white-space:nowrap; box-shadow:0 2px 4px rgba(0,0,0,0.5);">${text}</div>`,
-                iconAnchor: [30, 30]
+                iconAnchor: [20, 25]
             })
         }).addTo(map);
         
