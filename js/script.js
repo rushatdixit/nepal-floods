@@ -382,6 +382,8 @@ measureBtn.addEventListener('click', () => {
             currentTempMarker = null;
             measureTooltip.innerText = 'Click to start...';
         }
+        // Always hide the tooltip when disabling the tool
+        measureTooltip.style.display = 'none';
     }
 });
 
