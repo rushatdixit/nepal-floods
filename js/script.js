@@ -345,3 +345,91 @@ document.getElementById('loc-collapse-btn').addEventListener('click', function()
     }
 });
 // -----------------------------
+
+
+// --- Measure Tool Logic ---
+let isMeasuring = false;
+let measurePoints = [];
+let measurePolyline = null;
+let measureMarkers = [];
+let measureTooltip = document.getElementById('measure-tooltip');
+
+const measureBtn = document.getElementById('measure-btn');
+measureBtn.addEventListener('click', () => {
+    isMeasuring = !isMeasuring;
+    if (isMeasuring) {
+        measureBtn.classList.add('active');
+        measureBtn.innerText = '🛑 Stop';
+        map.getContainer().style.cursor = 'crosshair';
+    } else {
+        measureBtn.classList.remove('active');
+        measureBtn.innerText = '📏 Measure';
+        map.getContainer().style.cursor = '';
+        clearMeasurement();
+    }
+});
+
+function clearMeasurement() {
+    if (measurePolyline) map.removeLayer(measurePolyline);
+    measureMarkers.forEach(m => map.removeLayer(m));
+    measurePoints = [];
+    measureMarkers = [];
+    measurePolyline = null;
+    measureTooltip.style.display = 'none';
+}
+
+map.on('click', (e) => {
+    if (!isMeasuring) return;
+    
+    measurePoints.push(e.latlng);
+    
+    const marker = L.circleMarker(e.latlng, { radius: 4, color: '#00ffff', fillColor: '#00ffff', fillOpacity: 1 }).addTo(map);
+    measureMarkers.push(marker);
+    
+    if (measurePoints.length > 1) {
+        if (measurePolyline) map.removeLayer(measurePolyline);
+        measurePolyline = L.polyline(measurePoints, { color: '#00ffff', weight: 3, dashArray: '5, 5' }).addTo(map);
+    }
+    
+    updateMeasureTooltip(e);
+});
+
+map.on('mousemove', (e) => {
+    if (!isMeasuring) return;
+    
+    measureTooltip.style.display = 'block';
+    measureTooltip.style.left = (e.originalEvent.pageX + 15) + 'px';
+    measureTooltip.style.top = (e.originalEvent.pageY + 15) + 'px';
+    
+    updateMeasureTooltip(e);
+});
+
+function updateMeasureTooltip(e) {
+    if (measurePoints.length === 0) {
+        measureTooltip.innerText = 'Click to start...';
+        return;
+    }
+    
+    let totalDist = 0;
+    for (let i = 0; i < measurePoints.length - 1; i++) {
+        totalDist += map.distance(measurePoints[i], measurePoints[i+1]);
+    }
+    
+    if (e && e.latlng) {
+        totalDist += map.distance(measurePoints[measurePoints.length - 1], e.latlng);
+    }
+    
+    if (totalDist > 2000) {
+        measureTooltip.innerText = (totalDist / 1000).toFixed(2) + ' km';
+    } else {
+        measureTooltip.innerText = Math.round(totalDist) + ' m';
+    }
+}
+
+map.on('contextmenu', (e) => {
+    if (isMeasuring) {
+        clearMeasurement();
+        updateMeasureTooltip(e);
+    }
+});
+// --------------------------
