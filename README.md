@@ -7,10 +7,12 @@ This tool dynamically queries the **Microsoft Planetary Computer STAC API** in r
 
 ## Features
 - **Dynamic Satellite Imagery**: Connects directly to the Planetary Computer to retrieve seamless Sentinel-2 map tiles using anonymous SAS tokens.
-- **Smart Cloud-Filtering**: The "Before" layer utilizes an algorithm to scan months of orbital passes, automatically selecting and rendering the clearest, most cloud-free day to use as a baseline.
+- **Smart Cloud-Filtering**: Scans orbital passes using a strict cloud-cover threshold to automatically select and render the clearest day to use as a baseline and aftermath comparison.
+- **Interactive Measurement Tool**: A custom-built distance and width measurement tool utilizing Leaflet's Haversine formula engine for true Earth-curvature accuracy. Measurements drop permanent segment labels and dynamically color-code themselves (Green for Before imagery, Red for After imagery) for direct visual comparisons of river expansion.
 - **Interactive River Tracing**: A precise, glowing path traces the exact route of the destruction down the Lhende Khola and Trishuli River valleys.
-- **Cinematic Location Teleportation**: Users can fly to 5 critically impacted waypoints (including the Langtang Lirung Glacier source and the Gyirong Port border crossing) via an interactive control panel.
+- **Cinematic Location Teleportation**: Users can fly to 4 critically impacted waypoints (including the Langtang Lirung Glacier source and the Gyirong Port border crossing) via an interactive control panel.
 - **Embedded Footage**: Location markers feature popups with embedded YouTube Shorts showcasing verified on-the-ground footage of the devastation.
+- **Refined Minimalist UI**: Features collapsible information panels with custom SVG toggle icons, an integrated map scale, dynamic loading HUDs, explicit API rate-limit error handling, and map legends.
 
 ## Technologies Used
 * **HTML/CSS/JavaScript (Vanilla)**: No heavy frameworks, purely static files.
@@ -25,4 +27,4 @@ Since the application consists entirely of client-side code, no build step or ba
 3. Open `http://localhost:8080` in your browser.
 
 ## Deployment
-This project is designed to be fully compatible with **GitHub Pages**. Simply push the repository to GitHub and enable Pages deployment from the `main` branch to host it globally for free.
+This project is designed to be fully compatible with **GitHub Pages**. Simply push the repository to GitHub and enable Pages deployment from the `main` branch to host it globally for free. Cache-busting URL parameters are actively maintained to ensure users always receive the latest UI updates.
